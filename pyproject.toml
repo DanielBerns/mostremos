@@ -1,0 +1,14 @@
+[project]
+name = "mostremos"
+version = "0.1.0"
+description = "A crowdsourced, location-based data collection system, for civic and commercial reporting."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[build-system]
+requires = ["uv_build>=0.10.2,<0.11.0"]
+build-backend = "uv_build"
