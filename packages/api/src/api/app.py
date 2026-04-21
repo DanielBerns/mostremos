@@ -13,7 +13,7 @@ def create_app():
     # __file__ is packages/api/src/api/app.py
     # .parents[3] navigates up to the 'packages' directory
     current_dir = Path(__file__).resolve().parent
-    frontend_dir = current_dir.parents[3] / "frontend"
+    frontend_dir = current_dir.parents[2] / "frontend"
 
     # 2. Tell Flask where the static files are, and set the URL path to root ('/')
     app = Flask(__name__, static_folder=str(frontend_dir), static_url_path='/')
