@@ -19,8 +19,8 @@ cp anywhere.py anywhere/backend/src/packages/anywhere.py
 # 4. Make the packages directory a valid Python module space
 touch anywhere/backend/src/packages/__init__.py
 
-# 5. Generate a clean requirements.txt (excluding local workspace links)
+# 5. Generate a clean requirements.txt
 echo "Exporting third-party dependencies..."
-uv pip freeze | grep -v "file://" > anywhere/backend/requirements.txt
+cp anywhere_requirements.txt anywhere/backend/requirements.txt
 
 echo "Deployment package ready in ./anywhere"
