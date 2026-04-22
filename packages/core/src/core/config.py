@@ -1,11 +1,11 @@
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any # Fixed
+
 
 import yaml
 
-def load_configuration(config_path: Path) -> dict[str, Any]:
+def load_configuration(config_path: Path):
     if not config_path.exists():
         raise FileNotFoundError(f"Configuration file missing at {config_path}")
 
