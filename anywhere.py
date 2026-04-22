@@ -9,6 +9,6 @@ if str(packages_dir) not in sys.path:
 
 print(sys.path)
 
-from api import create_app
+from api.app import create_app
 
 app = create_app()
