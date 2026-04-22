@@ -1,0 +1,4 @@
+# Configuration values
+APP_INSTANCE: "devel"
+STORAGE_DIR: "/tmp/crowdsource_demo_devel"
+ADMIN_API_KEY: "ALn9mY4MW1g3vF2Bg2UWWNQ2UqcyynD5xss-S4kFlmCmWhwA4yG6v4CD55uIzEEVPMpKyw6Yt7cvaS8SL5zDRA"

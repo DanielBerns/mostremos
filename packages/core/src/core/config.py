@@ -1,6 +1,19 @@
 import os
 from dataclasses import dataclass
 
+import os
+import yaml
+from pathlib import Path
+
+def load_configuration(config_path: Path) -> dict[str, Any]:
+    if not config_path.exists():
+        raise FileNotFoundError(f"Configuration file missing at {config_path}")
+
+    with open(config_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+config = load_configuration(Path.home() / "Info" / "server.yaml")
+
 @dataclass
 class GeoBoundingBox:
     min_lat: float
@@ -17,9 +30,8 @@ DEMO_BOUNDING_BOX = GeoBoundingBox(
     min_lon=-67.8, max_lon=-67.3
 )
 
-APP_INSTANCE = os.getenv("APP_INSTANCE", "devel")  # isolate devel, test, prod
-STORAGE_DIR = os.getenv("STORAGE_DIR", f"/tmp/crowdsource_demo_{APP_INSTANCE}")
+APP_INSTANCE = config.get("APP_INSTANCE", "devel")  # isolate devel, test, prod
+STORAGE_DIR = config.get("STORAGE_DIR", f"/tmp/crowdsource_demo_{APP_INSTANCE}")
 
 # Admin Authentication
-# In production, set this via export ADMIN_API_KEY="your-secure-random-string"
-ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "dev-secret-admin-key-123")
+ADMIN_API_KEY = config.get("ADMIN_API_KEY", "dev-secret-admin-key-123")
