@@ -1,9 +1,9 @@
 import os
 from dataclasses import dataclass
-
-import os
-import yaml
 from pathlib import Path
+from typing import Any
+
+import yaml
 
 def load_configuration(config_path: Path) -> dict[str, Any]:
     if not config_path.exists():
