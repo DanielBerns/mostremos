@@ -1,4 +1,4 @@
-// Register the Service Worker
+// Register the Service Worker (keeps the app installable and caches UI files)
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
@@ -16,8 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         noResultsText: 'No se encontraron categorías',
     });
 
-    // Mocking the API fetch for the demo.
-    // Later, you pull this from your Flask GET /tags endpoint based on Accept-Language
+    // Mocking the tags list
     const mockTags = [
         { value: 'tag_pothole_001', label: 'Bache / Pozo' },
         { value: 'tag_dog_001', label: 'Perro Callejero' },
@@ -49,145 +48,83 @@ document.addEventListener('DOMContentLoaded', () => {
         locationStatus.innerHTML = `❌ Su dispositivo no soporta GPS.`;
     }
 
-    // 3. Handle Form Submission
+    // 3. Handle Form Submission (Synchronous Direct Upload)
     const form = document.getElementById('submission-form');
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        // Safety check: ensure we have coordinates before sending
+        if (!latInput.value || !lonInput.value) {
+            alert("Espere a obtener las coordenadas del GPS.");
+            return;
+        }
+
         submitBtn.disabled = true;
-        submitBtn.innerText = "Guardando...";
+        submitBtn.innerText = "Enviando al servidor...";
 
         const fileInput = document.getElementById('photo-input');
         const file = fileInput.files.length > 0 ? fileInput.files[0] : null;
 
-        const submissionData = {
-            lat: parseFloat(latInput.value),
-                          lon: parseFloat(lonInput.value),
-                          payload: {
-                              user_id: "demo_user_1", // Hardcoded for demo UI
-                              items: [
-                                  {
-                                      tag_id: choices.getValue(true),
-                          item_type: "text",
-                          content_payload: { notes: document.getElementById('notes').value }
-                                  }
-                              ]
-                          }
-        };
-
-        try {
-            // Save to Dexie.js (Offline Queue)
-            await saveToLocalQueue(submissionData, file);
-            alert("Reporte guardado localmente. Se sincronizará automáticamente.");
-            form.reset();
-                          choices.setChoiceByValue('');
-            submitBtn.innerText = "Guardar Reporte";
-            submitBtn.disabled = false;
-
-            // Trigger sync check here
-            syncWithServer();
-
-        } catch (err) {
-            alert("Error al guardar el reporte.");
-            submitBtn.innerText = "Guardar Reporte";
-            submitBtn.disabled = false;
-        }
-    });
-    // --- Network Event Listeners ---
-
-    // Attempt to sync immediately when the app loads
-    syncWithServer();
-
-    // Listen for the browser regaining internet connection
-    window.addEventListener('online', () => {
-        console.log("Network restored. Triggering background sync...");
-        document.getElementById('location-status').innerHTML += " (Conexión restablecida)";
-        syncWithServer();
-    });
-
-    window.addEventListener('offline', () => {
-        console.log("Device is offline. Submissions will be queued.");
-        document.getElementById('location-status').innerHTML += " (Modo sin conexión)";
-    });
-});
-
-// --- Synchronization Engine ---
-
-async function syncWithServer() {
-    // 1. Fetch all pending records from IndexedDB
-    const pendingSubmissions = await db.submissions.where('status').equals('pending').toArray();
-
-    if (pendingSubmissions.length === 0) {
-        console.log("No pending submissions to sync.");
-        return;
-    }
-
-    console.log(`Found ${pendingSubmissions.length} pending submissions. Starting sync...`);
-
-    // 2. Process the queue sequentially
-    for (const record of pendingSubmissions) {
         try {
             const formData = new FormData();
             const items = [];
+            const tagValue = choices.getValue(true);
 
             // A. Attach the image file if it exists
-            if (record.image) {
+            if (file) {
                 items.push({
-                    tag_id: record.payload.items[0].tag_id,
+                    tag_id: tagValue,
                     item_type: "image",
-                    content_payload: {} // The Flask backend will populate the path
+                    content_payload: {}
                 });
-                // Append the binary blob to the form
-                formData.append('file', record.image, `photo_${record.id}.jpg`);
+                formData.append('file', file, `photo_${Date.now()}.jpg`);
             }
 
             // B. Attach the text/notes item
             items.push({
-                tag_id: record.payload.items[0].tag_id,
+                tag_id: tagValue,
                 item_type: "text",
-                content_payload: record.payload.items[0].content_payload
+                content_payload: { notes: document.getElementById('notes').value }
             });
 
-            // C. Build the main JSON payload structure
+            // C. Build the JSON payload structure
             const apiPayload = {
-                user_id: record.payload.user_id,
-                latitude: record.lat,
-                longitude: record.lon,
-                device_timestamp: record.timestamp,
-                items: items
+                user_id: "demo_user_1",
+                latitude: parseFloat(latInput.value),
+                          longitude: parseFloat(lonInput.value),
+                          device_timestamp: new Date().toISOString(),
+                          items: items
             };
 
             formData.append('data', JSON.stringify(apiPayload));
 
-            // 3. Transmit to the Flask API
-            // Note: Update this URL if serving the frontend from a different port
-            const response = await fetch('http://127.0.0.1:5000/api/v1/submissions/', {
-                method: 'POST',
-                headers: {
-                    'Accept-Language': 'es' // Request localized errors from Flask
-                },
-                body: formData
-            });
+                          // D. Transmit directly to the Flask API
+                          const response = await fetch('/api/v1/submissions/', {
+                              method: 'POST',
+                              headers: {
+                                  'Accept-Language': 'es'
+                              },
+                              body: formData
+                          });
 
-            // 4. Handle the API Response
             if (response.ok) {
-                // Success: Remove the record to free up phone storage
-                await db.submissions.delete(record.id);
-                console.log(`Successfully synced record ${record.id}`);
+                alert("Reporte enviado con éxito.");
+                form.reset();
+                          choices.setChoiceByValue('');
             } else {
                 const errorData = await response.json();
-                console.error(`Server rejected record ${record.id}:`, errorData);
-
-                // If it's a hard rejection (like failing the Geo-fence or missing data),
-                // mark it as 'failed' so it doesn't get stuck in an infinite retry loop.
-                if (response.status === 400 || response.status === 403) {
-                    await db.submissions.update(record.id, { status: 'failed', server_error: errorData.error });
-                }
+                console.error("Server rejection:", errorData);
+                alert(`Error del servidor: ${errorData.error || 'Desconocido'}`);
             }
 
         } catch (networkError) {
-            console.warn(`Network error while syncing. Pausing queue.`, networkError);
-            // Break the loop; if one fails due to network, the others will too.
-            break;
+            console.error("Upload failed:", networkError);
+            alert("Error de red. Verifique su conexión y vuelva a intentar.");
+        } finally {
+            // Restore button state
+            submitBtn.innerText = "Enviar Reporte";
+            submitBtn.disabled = false;
         }
-    }
-}
+    });
+});
