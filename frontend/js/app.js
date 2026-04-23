@@ -1,46 +1,9 @@
-// Register the Service Worker (keeps the app installable and caches UI files)
+// Register the Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
         .then(reg => console.log('Service Worker registered!', reg.scope))
         .catch(err => console.error('Service Worker registration failed: ', err));
-    });
-}
-
-// Memory-efficient image compression (Fallback for gallery uploads)
-async function compressImage(file, maxWidth = 1024, quality = 0.7) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        const objectUrl = URL.createObjectURL(file);
-
-        img.onload = () => {
-            URL.revokeObjectURL(objectUrl);
-
-            let width = img.width;
-            let height = img.height;
-
-            if (width > maxWidth) {
-                height = Math.round((height * maxWidth) / width);
-                width = maxWidth;
-            }
-
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-
-            canvas.toBlob((blob) => {
-                resolve(blob);
-            }, 'image/jpeg', quality);
-        };
-
-        img.onerror = (err) => {
-            URL.revokeObjectURL(objectUrl);
-            reject(err);
-        };
-
-        img.src = objectUrl;
     });
 }
 
@@ -95,8 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const photoPreview = document.getElementById('photo-preview');
     const btnCapture = document.getElementById('btn-capture');
     const btnRetake = document.getElementById('btn-retake');
-    const fallbackUpload = document.getElementById('fallback-upload');
-    const fileInput = document.getElementById('photo-input');
+    const compressCheckbox = document.getElementById('compress-checkbox');
 
     if (btnStartCamera) {
         btnStartCamera.addEventListener('click', async () => {
@@ -108,19 +70,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 cameraContainer.style.display = 'flex';
                 btnStartCamera.style.display = 'none';
-                fallbackUpload.style.display = 'none';
             } catch (err) {
                 console.error("Error accessing camera:", err);
-                alert("No se pudo acceder a la cámara. Por favor, use la galería.");
+                alert("No se pudo acceder a la cámara. Revise los permisos del navegador.");
             }
         });
 
         btnCapture.addEventListener('click', () => {
-            canvasElement.width = videoElement.videoWidth;
-            canvasElement.height = videoElement.videoHeight;
+            let targetWidth = videoElement.videoWidth;
+            let targetHeight = videoElement.videoHeight;
+            let quality = 1.0;
+
+            // Apply optional compression logic
+            if (compressCheckbox.checked) {
+                const maxWidth = 1024;
+                if (targetWidth > maxWidth) {
+                    targetHeight = Math.round((targetHeight * maxWidth) / targetWidth);
+                    targetWidth = maxWidth;
+                }
+                quality = 0.7; // Lower quality for file size reduction
+            }
+
+            canvasElement.width = targetWidth;
+            canvasElement.height = targetHeight;
 
             const ctx = canvasElement.getContext('2d');
-            ctx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+            ctx.drawImage(videoElement, 0, 0, targetWidth, targetHeight);
 
             canvasElement.toBlob((blob) => {
                 capturedBlob = blob;
@@ -130,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 btnCapture.style.display = 'none';
                 btnRetake.style.display = 'block';
-            }, 'image/jpeg', 0.7);
+            }, 'image/jpeg', quality);
         });
 
         btnRetake.addEventListener('click', () => {
@@ -150,13 +125,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (cameraContainer) {
             cameraContainer.style.display = 'none';
             btnStartCamera.style.display = 'block';
-            fallbackUpload.style.display = 'block';
             capturedBlob = null;
             photoPreview.style.display = 'none';
             videoElement.style.display = 'block';
             btnCapture.style.display = 'block';
             btnRetake.style.display = 'none';
-            fileInput.value = "";
         }
     }
 
@@ -179,23 +152,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const items = [];
             const tagValue = choices.getValue(true);
 
-            // A. Attach the image (Prioritize WebRTC live capture, fallback to Gallery)
+            // A. Attach the captured image (Gallery fallback removed)
             if (capturedBlob) {
                 items.push({ tag_id: tagValue, item_type: "image", content_payload: {} });
                 formData.append('file', capturedBlob, `photo_${Date.now()}.jpg`);
-            } else if (fileInput.files.length > 0) {
-                const fallbackFile = fileInput.files[0];
-                try {
-                    const compressedBlob = await compressImage(fallbackFile, 1024, 0.7);
-                    items.push({ tag_id: tagValue, item_type: "image", content_payload: {} });
-                    formData.append('file', compressedBlob, `photo_${Date.now()}.jpg`);
-                } catch (compressError) {
-                    console.error("Compression failed:", compressError);
-                    alert("Error al procesar la imagen.");
-                    submitBtn.innerText = "Enviar Reporte";
-                    submitBtn.disabled = false;
-                    return;
-                }
             }
 
             // B. Attach the text/notes item

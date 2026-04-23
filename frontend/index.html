@@ -28,22 +28,23 @@
 
             <div id="camera-container" style="display: none; flex-direction: column; align-items: center; margin-bottom: 15px;">
                 <video id="camera-feed" autoplay playsinline style="width: 100%; max-width: 400px; border-radius: 8px; background-color: #000;"></video>
-
                 <canvas id="camera-canvas" style="display: none;"></canvas>
-
                 <img id="photo-preview" style="display: none; width: 100%; max-width: 400px; border-radius: 8px; margin-top: 10px;" />
+
+                <div class="form-check mt-3 mb-2 w-100 text-start">
+                    <input class="form-check-input" type="checkbox" id="compress-checkbox" checked>
+                    <label class="form-check-label" for="compress-checkbox" style="font-size: 0.9em; color: #555;">
+                        Comprimir imagen (Recomendado)
+                    </label>
+                </div>
 
                 <div style="margin-top: 10px; width: 100%; display: flex; justify-content: space-between;">
                     <button type="button" id="btn-capture" class="btn btn-primary w-100">Tomar Foto</button>
                     <button type="button" id="btn-retake" class="btn btn-secondary w-100" style="display: none;">Volver a tomar</button>
                 </div>
             </div>
-
-            <div id="fallback-upload">
-                <label for="photo-input" style="font-size: 0.9em; color: #666;">O subir desde galería:</label>
-                <input type="file" id="photo-input" accept="image/*" class="form-control">
-            </div>
         </div>
+
         <div class="card">
             <strong>2. Ubicación</strong>
             <div id="location-status">📍 Obteniendo coordenadas...</div>
