@@ -3,8 +3,6 @@ import secrets
 import structlog
 from werkzeug.security import generate_password_hash
 
-import pdb
-
 # Import the infrastructure components
 from infra.database.engine import engine, SessionLocal
 from infra.database.schema import Base, UserModel
@@ -12,7 +10,6 @@ from infra.database.schema import Base, UserModel
 logger = structlog.get_logger()
 
 def bootstrap_database():
-    pdb.set_trace()
     logger.info("Initializing database schema...")
 
     # 1. Create all tables defined in the schema

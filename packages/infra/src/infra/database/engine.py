@@ -3,11 +3,6 @@ from sqlalchemy.orm import sessionmaker
 from infra.database.schema import Base
 from core.config import DATABASE_PATH
 
-import pdb
-
-print(DATABASE_PATH)
-pdb.set_trace()
-
 engine = create_engine(DATABASE_PATH, connect_args={"check_same_thread": False})
 
 # Enable WAL mode for concurrent reads/writes
