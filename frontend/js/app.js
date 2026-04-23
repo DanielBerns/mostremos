@@ -7,6 +7,47 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// Memory-efficient image compression
+async function compressImage(file, maxWidth = 1024, quality = 0.7) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        // createObjectURL uses far less memory than FileReader
+        const objectUrl = URL.createObjectURL(file);
+
+        img.onload = () => {
+            URL.revokeObjectURL(objectUrl); // Free up memory immediately
+
+            let width = img.width;
+            let height = img.height;
+
+            // Scale down if the image is wider than maxWidth
+            if (width > maxWidth) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+            }
+
+            // Draw to an invisible canvas
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Export as a lightweight JPEG Blob
+            canvas.toBlob((blob) => {
+                resolve(blob);
+            }, 'image/jpeg', quality);
+        };
+
+        img.onerror = (err) => {
+            URL.revokeObjectURL(objectUrl);
+            reject(err);
+        };
+
+        img.src = objectUrl;
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Initialize Choices.js
     const tagSelect = document.getElementById('tag-select');
@@ -73,12 +114,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // A. Attach the image file if it exists
             if (file) {
-                items.push({
-                    tag_id: tagValue,
-                    item_type: "image",
-                    content_payload: {}
-                });
-                formData.append('file', file, `photo_${Date.now()}.jpg`);
+                try {
+                    // Compress the giant smartphone photo down to a ~300KB Blob
+                    const compressedBlob = await compressImage(file, 1024, 0.7);
+
+                    items.push({
+                        tag_id: tagValue,
+                        item_type: "image",
+                        content_payload: {}
+                    });
+
+                    // Append the compressed Blob instead of the raw File
+                    formData.append('file', compressedBlob, `photo_${Date.now()}.jpg`);
+                } catch (compressError) {
+                    console.error("Compression failed:", compressError);
+                    alert("Error al procesar la imagen en el teléfono.");
+                    submitBtn.innerText = "Enviar Reporte";
+                    submitBtn.disabled = false;
+                    return; // Stop the upload process
+                }
             }
 
             // B. Attach the text/notes item
