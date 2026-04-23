@@ -19,11 +19,31 @@
     <h2>Nuevo Reporte</h2>
 
     <form id="submission-form">
-        <div class="card">
-            <label for="photo-input"><strong>1. Tomar Foto</strong></label>
-            <input type="file" id="photo-input" accept="image/*" style="margin-top:10px; width:100%;">
-        </div>
+        <div class="mb-3">
+            <label class="form-label">Evidencia Fotográfica</label>
 
+            <button type="button" id="btn-start-camera" class="btn btn-outline-primary w-100 mb-2">
+                📸 Usar Cámara Integrada
+            </button>
+
+            <div id="camera-container" style="display: none; flex-direction: column; align-items: center; margin-bottom: 15px;">
+                <video id="camera-feed" autoplay playsinline style="width: 100%; max-width: 400px; border-radius: 8px; background-color: #000;"></video>
+
+                <canvas id="camera-canvas" style="display: none;"></canvas>
+
+                <img id="photo-preview" style="display: none; width: 100%; max-width: 400px; border-radius: 8px; margin-top: 10px;" />
+
+                <div style="margin-top: 10px; width: 100%; display: flex; justify-content: space-between;">
+                    <button type="button" id="btn-capture" class="btn btn-primary w-100">Tomar Foto</button>
+                    <button type="button" id="btn-retake" class="btn btn-secondary w-100" style="display: none;">Volver a tomar</button>
+                </div>
+            </div>
+
+            <div id="fallback-upload">
+                <label for="photo-input" style="font-size: 0.9em; color: #666;">O subir desde galería:</label>
+                <input type="file" id="photo-input" accept="image/*" class="form-control">
+            </div>
+        </div>
         <div class="card">
             <strong>2. Ubicación</strong>
             <div id="location-status">📍 Obteniendo coordenadas...</div>

@@ -7,33 +7,29 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// Memory-efficient image compression
+// Memory-efficient image compression (Fallback for gallery uploads)
 async function compressImage(file, maxWidth = 1024, quality = 0.7) {
     return new Promise((resolve, reject) => {
         const img = new Image();
-        // createObjectURL uses far less memory than FileReader
         const objectUrl = URL.createObjectURL(file);
 
         img.onload = () => {
-            URL.revokeObjectURL(objectUrl); // Free up memory immediately
+            URL.revokeObjectURL(objectUrl);
 
             let width = img.width;
             let height = img.height;
 
-            // Scale down if the image is wider than maxWidth
             if (width > maxWidth) {
                 height = Math.round((height * maxWidth) / width);
                 width = maxWidth;
             }
 
-            // Draw to an invisible canvas
             const canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
 
-            // Export as a lightweight JPEG Blob
             canvas.toBlob((blob) => {
                 resolve(blob);
             }, 'image/jpeg', quality);
@@ -57,7 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
         noResultsText: 'No se encontraron categorías',
     });
 
-    // Mocking the tags list
     const mockTags = [
         { value: 'tag_pothole_001', label: 'Bache / Pozo' },
         { value: 'tag_dog_001', label: 'Perro Callejero' },
@@ -77,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 latInput.value = position.coords.latitude;
                 lonInput.value = position.coords.longitude;
                 locationStatus.innerHTML = `📍 GPS Listo: ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`;
-                submitBtn.disabled = false; // Enable submit only if GPS works
+                submitBtn.disabled = false;
             },
             (error) => {
                 locationStatus.innerHTML = `❌ Error de GPS: Habilite la ubicación.`;
@@ -89,13 +84,88 @@ document.addEventListener('DOMContentLoaded', () => {
         locationStatus.innerHTML = `❌ Su dispositivo no soporta GPS.`;
     }
 
-    // 3. Handle Form Submission (Synchronous Direct Upload)
+    // --- WEBRTC CAMERA LOGIC ---
+    let videoStream = null;
+    let capturedBlob = null;
+
+    const btnStartCamera = document.getElementById('btn-start-camera');
+    const cameraContainer = document.getElementById('camera-container');
+    const videoElement = document.getElementById('camera-feed');
+    const canvasElement = document.getElementById('camera-canvas');
+    const photoPreview = document.getElementById('photo-preview');
+    const btnCapture = document.getElementById('btn-capture');
+    const btnRetake = document.getElementById('btn-retake');
+    const fallbackUpload = document.getElementById('fallback-upload');
+    const fileInput = document.getElementById('photo-input');
+
+    if (btnStartCamera) {
+        btnStartCamera.addEventListener('click', async () => {
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                });
+                videoElement.srcObject = videoStream;
+
+                cameraContainer.style.display = 'flex';
+                btnStartCamera.style.display = 'none';
+                fallbackUpload.style.display = 'none';
+            } catch (err) {
+                console.error("Error accessing camera:", err);
+                alert("No se pudo acceder a la cámara. Por favor, use la galería.");
+            }
+        });
+
+        btnCapture.addEventListener('click', () => {
+            canvasElement.width = videoElement.videoWidth;
+            canvasElement.height = videoElement.videoHeight;
+
+            const ctx = canvasElement.getContext('2d');
+            ctx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+
+            canvasElement.toBlob((blob) => {
+                capturedBlob = blob;
+                photoPreview.src = URL.createObjectURL(blob);
+                photoPreview.style.display = 'block';
+                videoElement.style.display = 'none';
+
+                btnCapture.style.display = 'none';
+                btnRetake.style.display = 'block';
+            }, 'image/jpeg', 0.7);
+        });
+
+        btnRetake.addEventListener('click', () => {
+            capturedBlob = null;
+            photoPreview.style.display = 'none';
+            videoElement.style.display = 'block';
+            btnCapture.style.display = 'block';
+            btnRetake.style.display = 'none';
+        });
+    }
+
+    function stopCamera() {
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+            videoStream = null;
+        }
+        if (cameraContainer) {
+            cameraContainer.style.display = 'none';
+            btnStartCamera.style.display = 'block';
+            fallbackUpload.style.display = 'block';
+            capturedBlob = null;
+            photoPreview.style.display = 'none';
+            videoElement.style.display = 'block';
+            btnCapture.style.display = 'block';
+            btnRetake.style.display = 'none';
+            fileInput.value = "";
+        }
+    }
+
+    // 3. Handle Form Submission
     const form = document.getElementById('submission-form');
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // Safety check: ensure we have coordinates before sending
         if (!latInput.value || !lonInput.value) {
             alert("Espere a obtener las coordenadas del GPS.");
             return;
@@ -104,34 +174,27 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.disabled = true;
         submitBtn.innerText = "Enviando al servidor...";
 
-        const fileInput = document.getElementById('photo-input');
-        const file = fileInput.files.length > 0 ? fileInput.files[0] : null;
-
         try {
             const formData = new FormData();
             const items = [];
             const tagValue = choices.getValue(true);
 
-            // A. Attach the image file if it exists
-            if (file) {
+            // A. Attach the image (Prioritize WebRTC live capture, fallback to Gallery)
+            if (capturedBlob) {
+                items.push({ tag_id: tagValue, item_type: "image", content_payload: {} });
+                formData.append('file', capturedBlob, `photo_${Date.now()}.jpg`);
+            } else if (fileInput.files.length > 0) {
+                const fallbackFile = fileInput.files[0];
                 try {
-                    // Compress the giant smartphone photo down to a ~300KB Blob
-                    const compressedBlob = await compressImage(file, 1024, 0.7);
-
-                    items.push({
-                        tag_id: tagValue,
-                        item_type: "image",
-                        content_payload: {}
-                    });
-
-                    // Append the compressed Blob instead of the raw File
+                    const compressedBlob = await compressImage(fallbackFile, 1024, 0.7);
+                    items.push({ tag_id: tagValue, item_type: "image", content_payload: {} });
                     formData.append('file', compressedBlob, `photo_${Date.now()}.jpg`);
                 } catch (compressError) {
                     console.error("Compression failed:", compressError);
-                    alert("Error al procesar la imagen en el teléfono.");
+                    alert("Error al procesar la imagen.");
                     submitBtn.innerText = "Enviar Reporte";
                     submitBtn.disabled = false;
-                    return; // Stop the upload process
+                    return;
                 }
             }
 
@@ -166,6 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert("Reporte enviado con éxito.");
                 form.reset();
                           choices.setChoiceByValue('');
+                stopCamera();
             } else {
                 const errorData = await response.json();
                 console.error("Server rejection:", errorData);
@@ -176,7 +240,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Upload failed:", networkError);
             alert("Error de red. Verifique su conexión y vuelva a intentar.");
         } finally {
-            // Restore button state
             submitBtn.innerText = "Enviar Reporte";
             submitBtn.disabled = false;
         }
