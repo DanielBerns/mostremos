@@ -1,12 +1,9 @@
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from infra.database.schema import Base
-from core.config import APP_INSTANCE
+from core.config import DATABASE_PATH
 
-# Isolate databases based on the instance parameter
-DB_PATH = f"sqlite:///crowdsource_{APP_INSTANCE}.db"
-
-engine = create_engine(DB_PATH, connect_args={"check_same_thread": False})
+engine = create_engine(DATABASE_PATH, connect_args={"check_same_thread": False})
 
 # Enable WAL mode for concurrent reads/writes
 @event.listens_for(engine, "connect")

@@ -2,7 +2,6 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-
 import yaml
 
 def load_configuration(config_path: Path):
@@ -31,7 +30,15 @@ DEMO_BOUNDING_BOX = GeoBoundingBox(
 )
 
 APP_INSTANCE = config.get("APP_INSTANCE", "devel")  # isolate devel, test, prod
-STORAGE_DIR = config.get("STORAGE_DIR", f"/tmp/crowdsource_demo_{APP_INSTANCE}")
+
+HOME = Path.home()
+INSTANCE = HOME / "Info" / "mostremos" / APP_INSTANCE
+DEFAULT_STORAGE_DIR = INSTANCE / "storage"
+DEFAULT_DATABASE_DIR = INSTANCE / "database"
+DEFAULT_DATABASE_NAME = DEFAULT_DATABASE_DIR / "mostremos.db"
+DEFAULT_DATABASE_PATH = f"sqlite:///{DEFAULT_DATABASE_NAME}"
+STORAGE_DIR = config.get("STORAGE_DIR", DEFAULT_STORAGE_DIR)
+DATABASE_PATH = config.get("DATABASE_PATH", DEFAULT_DATABASE_PATH)
 
 # Admin Authentication
 ADMIN_API_KEY = config.get("ADMIN_API_KEY", "dev-secret-admin-key-123")
