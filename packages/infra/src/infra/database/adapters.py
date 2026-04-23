@@ -67,5 +67,36 @@ class SqlAlchemySubmissionRepository(SubmissionRepository):
         logger.info("submission_saved", submission_id=submission.id, item_count=len(submission.items))
 
     def get_recent(self, limit: int = 50) -> list[Submission]:
-        # Implementation for retrieving and mapping models back to dataclasses
-        pass
+        # 1. Fetch the ORM models, including their nested items
+        models = (
+            self.session.query(SubmissionModel)
+            .order_by(SubmissionModel.server_timestamp.desc())
+            .limit(limit)
+            .all()
+        )
+
+        # 2. Map ORM models back to pure Domain entities
+        submissions = []
+        for m in models:
+            items = [
+                SubmissionItem(
+                    id=item.id,
+                    submission_id=item.submission_id,
+                    tag_id=item.tag_id,
+                    item_type=item.item_type,
+                    content_payload=item.content_payload
+                ) for item in m.items
+            ]
+
+            submissions.append(Submission(
+                id=m.id,
+                user_id=m.user_id,
+                latitude=m.latitude,
+                longitude=m.longitude,
+                device_timestamp=m.device_timestamp,
+                server_timestamp=m.server_timestamp,
+                status=m.status,
+                items=items
+            ))
+
+        return submissions
