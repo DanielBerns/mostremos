@@ -74,7 +74,6 @@ def create_submission():
             content_payload=payload
         ))
 
-    # --- THE FIX IS HERE ---
     # Construct the parent Submission object using the validated data and items list
     submission = Submission(
         id=submission_id,

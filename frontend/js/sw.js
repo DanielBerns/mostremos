@@ -1,4 +1,4 @@
-const CACHE_NAME = 'reportes-ciudadanos-v6';
+const CACHE_NAME = 'reportes-ciudadanos-v7';
 
 // All the static files our app needs to run offline
 const ASSETS_TO_CACHE = [
