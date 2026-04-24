@@ -1,12 +1,11 @@
-const CACHE_NAME = 'reportes-ciudadanos-v2';
+const CACHE_NAME = 'reportes-ciudadanos-v5';
 
 // All the static files our app needs to run offline
 const ASSETS_TO_CACHE = [
     '/',
 '/index.html',
 '/js/app.js',
-'/js/db.js',
-'https://unpkg.com/dexie/dist/dexie.js',
+'/js/categories.js',
 'https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js',
 'https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css'
 ];

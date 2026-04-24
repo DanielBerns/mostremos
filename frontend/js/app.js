@@ -8,6 +8,7 @@ if ('serviceWorker' in navigator) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+
     // 1. Initialize Choices.js
     const tagSelect = document.getElementById('tag-select');
     const choices = new Choices(tagSelect, {
@@ -16,12 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
         noResultsText: 'No se encontraron categorías',
     });
 
-    const mockTags = [
-        { value: 'tag_pothole_001', label: 'Bache / Pozo' },
-        { value: 'tag_dog_001', label: 'Perro Callejero' },
-        { value: 'tag_price_001', label: 'Precio Supermercado' }
-    ];
-    choices.setChoices(mockTags, 'value', 'label', true);
+    // Load categories from the external js/categories.js file
+    if (typeof APP_CATEGORIES !== 'undefined') {
+        choices.setChoices(APP_CATEGORIES, 'value', 'label', true);
+    } else {
+        console.error("APP_CATEGORIES is not defined. Check categories.js");
+    }
 
     // 2. Acquire High-Accuracy Geolocation
     const locationStatus = document.getElementById('location-status');
