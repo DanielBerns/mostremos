@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 import structlog
 
+import pdb
+
 logger = structlog.get_logger()
 
 def main():
@@ -33,13 +35,12 @@ def main():
         logger.error("api_request_failed", status=response.status_code, text=response.text)
         return
 
-    json_response = response.json()
-    if not json_response:
+    submissions = response.json()
+    if not submissions:
         logger.info("no_new_data")
         return
 
-    submissions = json_response.get("data", [])
-
+    pdb.set_trace()
     # 3. Save the JSON payload
     json_path = output_dir / "latest_sync.json"
     with open(json_path, "w", encoding="utf-8") as f:

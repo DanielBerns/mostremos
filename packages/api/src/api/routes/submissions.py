@@ -37,7 +37,7 @@ def create_submission():
     if not DEMO_BOUNDING_BOX.is_within(lat, lon):
         return jsonify({"error": get_error_msg("out_of_bounds", lang)}), 403
 
-# 4. Handle File Upload (if present)
+    # 4. Handle File Upload (if present)
     uploaded_file = request.files.get('file')
     file_path = None
     saved_filename = None  # We will store the isolated filename here
@@ -71,6 +71,19 @@ def create_submission():
             content_payload=payload
         ))
 
+    # --- THE FIX IS HERE ---
+    # Construct the parent Submission object using the validated data and items list
+    submission = Submission(
+        id=submission_id,
+        user_id=validated_data['user_id'],
+        latitude=validated_data['latitude'],
+        longitude=validated_data['longitude'],
+        device_timestamp=validated_data['device_timestamp'],
+        server_timestamp=datetime.now(timezone.utc), # Improved: Record exact reception time
+        status="pending",
+        items=items
+    )
+    # -----------------------
 
     # 6. Save via Port (Infrastructure Adapter)
     repo.save(submission)
