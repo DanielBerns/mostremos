@@ -6,7 +6,6 @@ from infra.database.schema import UserModel, SubmissionModel, SubmissionItemMode
 
 logger = structlog.get_logger()
 
-# infra/database/adapters.py
 class SqlAlchemyUserRepository(UserRepository):
     def __init__(self, session: Session):
         self.session = session
