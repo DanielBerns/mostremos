@@ -37,12 +37,14 @@ def create_submission():
     if not DEMO_BOUNDING_BOX.is_within(lat, lon):
         return jsonify({"error": get_error_msg("out_of_bounds", lang)}), 403
 
-    # 4. Handle File Upload (if present)
+# 4. Handle File Upload (if present)
     uploaded_file = request.files.get('file')
     file_path = None
+    saved_filename = None  # We will store the isolated filename here
+
     if uploaded_file and uploaded_file.filename:
-        filename = secure_filename(f"{uuid.uuid4()}_{uploaded_file.filename}")
-        file_path = storage.save_file(uploaded_file, filename)
+        saved_filename = secure_filename(f"{uuid.uuid4()}_{uploaded_file.filename}")
+        file_path = storage.save_file(uploaded_file, saved_filename)
 
     # 5. Map to Domain Models
     submission_id = str(uuid.uuid4())
@@ -50,11 +52,16 @@ def create_submission():
 
     for item_data in validated_data['items']:
         payload = item_data['content_payload']
-        # If this item expects an image, inject the local file path we just created
+        # If this item expects an image, inject both the path and the isolated filename
         if item_data['item_type'] == 'image':
             if not file_path:
                 return jsonify({"error": get_error_msg("missing_file", lang)}), 400
-            payload = {"file_path": file_path}
+
+            # Inject the exact key sync_job.py is looking for
+            payload = {
+                "file_path": file_path,
+                "filename": saved_filename
+            }
 
         items.append(SubmissionItem(
             id=str(uuid.uuid4()),
@@ -64,16 +71,6 @@ def create_submission():
             content_payload=payload
         ))
 
-    submission = Submission(
-        id=submission_id,
-        user_id=validated_data['user_id'],
-        latitude=lat,
-        longitude=lon,
-        device_timestamp=validated_data['device_timestamp'],
-        server_timestamp=datetime.now(timezone.utc),
-        status="pending",
-        items=items
-    )
 
     # 6. Save via Port (Infrastructure Adapter)
     repo.save(submission)

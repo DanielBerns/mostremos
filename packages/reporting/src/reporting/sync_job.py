@@ -1,66 +1,88 @@
 import argparse
-import asyncio
-import aiohttp
+import requests
 import json
-import os
-from datetime import datetime, timezone
+from pathlib import Path
 import structlog
 
 logger = structlog.get_logger()
 
-async def fetch_admin_data(api_url: str, api_key: str) -> list:
-    """Pulls the aggregated submission data from the protected public API."""
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--api-url", required=True, help="Base URL for admin submissions")
+    parser.add_argument("--api-key", required=True, help="Admin API Key")
+    parser.add_argument("--output-dir", required=True, help="Local directory to save data")
+    args = parser.parse_args()
+
+    # 1. Setup local directories
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    images_dir = output_dir / "images"
+    images_dir.mkdir(parents=True, exist_ok=True)
+
     headers = {
-        "Authorization": f"Bearer {api_key}",
+        "Authorization": f"Bearer {args.api_key}",
         "Accept": "application/json"
     }
 
-    async with aiohttp.ClientSession() as session:
-        logger.info("requesting_data", url=api_url)
-        async with session.get(api_url, headers=headers) as response:
-            if response.status != 200:
-                error_text = await response.text()
-                logger.error("api_request_failed", status=response.status, error=error_text)
-                response.raise_for_status()
+    # 2. Fetch Submissions (JSON Metadata)
+    logger.info("requesting_data", url=args.api_url)
+    response = requests.get(args.api_url, headers=headers)
 
-            payload = await response.json()
-            return payload.get("data", [])
+    if not response.ok:
+        logger.error("api_request_failed", status=response.status_code, text=response.text)
+        return
 
-def generate_summary_report(data: list, output_dir: str):
-    """Processes the raw JSON and outputs a daily summary file."""
-    os.makedirs(output_dir, exist_ok=True)
+    json_response = response.json()
+    if not json_response:
+        logger.info("no_new_data")
+        return
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    file_path = os.path.join(output_dir, f"report_{timestamp}.json")
+    submissions = json_response.get("data", [])
 
-    # In a real scenario, you would do aggregations here
-    # (e.g., counting potholes vs stray dogs) before saving.
-    # For now, we save the raw verified dump.
+    # 3. Save the JSON payload
+    json_path = output_dir / "latest_sync.json"
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(submissions, f, indent=2)
 
-    with open(file_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+    logger.info("json_saved", path=str(json_path), count=len(submissions))
 
-    logger.info("report_generated", path=file_path, total_records=len(data))
+    # 4. Download the physical Image files
+    # This automatically strips a trailing slash and appends /file to match your new route
+    base_file_url = args.api_url.rstrip("/") + "/file"
 
-async def main():
-    parser = argparse.ArgumentParser(description="Pull data from the Crowdsource API and generate reports.")
-    parser.add_argument("--api-url", required=True, help="Full URL to the admin submissions endpoint")
-    parser.add_argument("--api-key", required=True, help="Secret bearer token for admin access")
-    parser.add_argument("--output-dir", required=True, help="Directory to save the generated reports")
+    for sub in submissions:
+        for item in sub.get("items", []):
+            if item.get("item_type") == "image":
 
-    args = parser.parse_args()
+                # Extract the filename from the payload
+                payload = item.get("content_payload", {})
+                filename = payload.get("filename")
 
-    try:
-        data = await fetch_admin_data(args.api_url, args.api_key)
+                if not filename:
+                    logger.warning("missing_filename_in_payload", item_id=item.get("id"))
+                    continue
 
-        if not data:
-            logger.info("no_new_data_to_report")
-            return
+                file_url = f"{base_file_url}/{filename}"
+                local_file_path = images_dir / filename
 
-        generate_summary_report(data, args.output_dir)
+                # Skip if we already downloaded it previously
+                if local_file_path.exists():
+                    logger.debug("file_already_exists", filename=filename)
+                    continue
 
-    except Exception as e:
-        logger.error("sync_job_failed", error=str(e))
+                # Stream the download
+                logger.info("downloading_image", filename=filename)
+                img_response = requests.get(file_url, headers=headers, stream=True)
+
+                if img_response.ok:
+                    # Write in chunks to prevent memory spikes
+                    with open(local_file_path, 'wb') as f:
+                        for chunk in img_response.iter_content(chunk_size=8192):
+                            f.write(chunk)
+                    logger.info("image_downloaded", filename=filename)
+                else:
+                    logger.error("image_download_failed", filename=filename, status=img_response.status_code)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "A crowdsourced, location-based data collection system, for civic and commercial reporting."
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "requests>=2.33.1",
+]
 
 [tool.uv.workspace]
 members = ["packages/*"]

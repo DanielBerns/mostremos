@@ -1,0 +1,72 @@
+[
+  {
+    "id": "5df1cac3-ecd6-4543-a7d1-453722927a3f",
+    "items_count": 2,
+    "latitude": -45.8626,
+    "longitude": -67.494,
+    "status": "pending"
+  },
+  {
+    "id": "b2503b38-efa8-4b1b-a810-e40c030f31e7",
+    "items_count": 2,
+    "latitude": -45.869096,
+    "longitude": -67.5300404,
+    "status": "pending"
+  },
+  {
+    "id": "b829ad39-bc8c-4496-8385-620d30baa98f",
+    "items_count": 2,
+    "latitude": -45.869096,
+    "longitude": -67.5300404,
+    "status": "pending"
+  },
+  {
+    "id": "bc0f0a4c-4b01-4c12-93bb-b384b6414555",
+    "items_count": 2,
+    "latitude": -45.8690826,
+    "longitude": -67.5300597,
+    "status": "pending"
+  },
+  {
+    "id": "6c78595d-f6e0-4945-9d04-181abda7ab6f",
+    "items_count": 2,
+    "latitude": -45.8690826,
+    "longitude": -67.5300597,
+    "status": "pending"
+  },
+  {
+    "id": "87302a1e-3956-4c70-9086-8654d67bdde4",
+    "items_count": 1,
+    "latitude": -45.8690826,
+    "longitude": -67.5300597,
+    "status": "pending"
+  },
+  {
+    "id": "c4b7a47a-e0d8-4063-b49a-8cd962fbfb31",
+    "items_count": 2,
+    "latitude": -45.8252629,
+    "longitude": -67.4633122,
+    "status": "pending"
+  },
+  {
+    "id": "8c7f1e3c-9742-4cb7-9ba7-d885f9ec2066",
+    "items_count": 2,
+    "latitude": -45.8251228,
+    "longitude": -67.4634558,
+    "status": "pending"
+  },
+  {
+    "id": "1adbf841-03d5-458c-856b-600f73472756",
+    "items_count": 2,
+    "latitude": -45.8250525,
+    "longitude": -67.4635829,
+    "status": "pending"
+  },
+  {
+    "id": "5858f699-e69c-4cc4-b5e7-67bae537fedf",
+    "items_count": 2,
+    "latitude": -45.8690093,
+    "longitude": -67.5301181,
+    "status": "pending"
+  }
+]
