@@ -1,5 +1,130 @@
 [
   {
+    "id": "4b4627b3-7f65-4a51-b853-6f02247b5a37",
+    "items": [
+      {
+        "content_payload": {
+          "file_path": "/home/danielwaltherberns/Info/mostremos/devel/storage/aa32d78b-e6b8-4d2b-a9a0-ca52fb121bad_photo_1777057144885.jpg",
+          "filename": "aa32d78b-e6b8-4d2b-a9a0-ca52fb121bad_photo_1777057144885.jpg"
+        },
+        "id": "bcf8118a-1022-4479-b120-e33060b361ca",
+        "item_type": "image",
+        "tag_id": "tag_pothole_001"
+      },
+      {
+        "content_payload": {
+          "notes": "test"
+        },
+        "id": "2a0a102f-7cbf-4c38-8dc4-7f95b4bd0d4f",
+        "item_type": "text",
+        "tag_id": "tag_pothole_001"
+      }
+    ],
+    "latitude": -45.8252091,
+    "longitude": -67.4634622,
+    "status": "pending"
+  },
+  {
+    "id": "2f5f0c3d-6e02-44ab-86f3-ab328acb23af",
+    "items": [
+      {
+        "content_payload": {
+          "file_path": "/home/danielwaltherberns/Info/mostremos/devel/storage/986f6f2d-2da0-4ee8-8505-d57e43248151_photo_1777051351003.jpg",
+          "filename": "986f6f2d-2da0-4ee8-8505-d57e43248151_photo_1777051351003.jpg"
+        },
+        "id": "da3957b6-3645-4e57-b267-c3b7c552ff9f",
+        "item_type": "image",
+        "tag_id": "tag_pothole_001"
+      },
+      {
+        "content_payload": {
+          "notes": ""
+        },
+        "id": "3767d93c-0246-4043-85d0-5abbe8562367",
+        "item_type": "text",
+        "tag_id": "tag_pothole_001"
+      }
+    ],
+    "latitude": -45.8250435,
+    "longitude": -67.4637043,
+    "status": "pending"
+  },
+  {
+    "id": "dc24d2d0-7ac9-4dad-b878-814e472d8ff0",
+    "items": [
+      {
+        "content_payload": {
+          "file_path": "/home/danielwaltherberns/Info/mostremos/devel/storage/2a5d0372-6b80-4637-88b5-0d8d24293d24_photo_1777051258364.jpg",
+          "filename": "2a5d0372-6b80-4637-88b5-0d8d24293d24_photo_1777051258364.jpg"
+        },
+        "id": "822b78dd-2cdb-45a8-b819-d54e754e5159",
+        "item_type": "image",
+        "tag_id": "tag_dog_001"
+      },
+      {
+        "content_payload": {
+          "notes": "Test"
+        },
+        "id": "2f037aae-d064-4649-99cf-f5fba15f49d3",
+        "item_type": "text",
+        "tag_id": "tag_dog_001"
+      }
+    ],
+    "latitude": -45.8250435,
+    "longitude": -67.4637043,
+    "status": "pending"
+  },
+  {
+    "id": "c003b4f6-3948-497f-9aa9-0d58b9a1afbf",
+    "items": [
+      {
+        "content_payload": {
+          "file_path": "/home/danielwaltherberns/Info/mostremos/devel/storage/cffdb5fd-3cc1-491c-a11b-c0e744c66fa2_photo_1777050263139.jpg",
+          "filename": "cffdb5fd-3cc1-491c-a11b-c0e744c66fa2_photo_1777050263139.jpg"
+        },
+        "id": "0a10e682-9d96-4eeb-9c2a-f560a2303165",
+        "item_type": "image",
+        "tag_id": "tag_dog_001"
+      },
+      {
+        "content_payload": {
+          "notes": "Ggsg"
+        },
+        "id": "979a7667-960f-48c1-a572-865de14193f1",
+        "item_type": "text",
+        "tag_id": "tag_dog_001"
+      }
+    ],
+    "latitude": -45.8250435,
+    "longitude": -67.4637043,
+    "status": "pending"
+  },
+  {
+    "id": "89b69662-7e92-451f-b97b-d397d96c0d59",
+    "items": [
+      {
+        "content_payload": {
+          "file_path": "/home/danielwaltherberns/Info/mostremos/devel/storage/645bbdae-709a-4fe5-9a2c-788967c9e8c8_photo_1777050150861.jpg",
+          "filename": "645bbdae-709a-4fe5-9a2c-788967c9e8c8_photo_1777050150861.jpg"
+        },
+        "id": "0629272e-a8ab-4ca0-b8bf-25a393862f53",
+        "item_type": "image",
+        "tag_id": "tag_dog_001"
+      },
+      {
+        "content_payload": {
+          "notes": "11:44hj"
+        },
+        "id": "521e97b2-3e14-409f-a350-f36b0ca72ecf",
+        "item_type": "text",
+        "tag_id": "tag_dog_001"
+      }
+    ],
+    "latitude": -45.8250435,
+    "longitude": -67.4637043,
+    "status": "pending"
+  },
+  {
     "id": "df21e012-895a-4dd6-905c-a049eed6b243",
     "items": [
       {

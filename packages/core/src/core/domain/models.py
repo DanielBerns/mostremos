@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 class User:
     id: str
     username: str
+    password_hash: str  # <-- New field
     role: str = "public"
     is_active: bool = True
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))

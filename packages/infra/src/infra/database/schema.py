@@ -9,6 +9,7 @@ class UserModel(Base):
 
     id = Column(String, primary_key=True)
     username = Column(String, unique=True, nullable=False)
+    password_hash = Column(String, nullable=False)
     role = Column(String, default="public", nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
