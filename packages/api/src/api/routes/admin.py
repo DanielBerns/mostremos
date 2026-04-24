@@ -1,10 +1,6 @@
-import os
+from pathlib import Path
 from flask import Blueprint, send_from_directory, jsonify
-# Adjust this import based on where your config actually lives
 from core.config import STORAGE_DIR
-
-
-from flask import Blueprint, jsonify
 from api.auth import require_admin_key
 from api.dependencies import get_submission_repo
 import structlog
@@ -46,7 +42,7 @@ def download_file(filename):
     Securely serves a physical file from the storage directory.
     """
     # 1. Verify the file actually exists on the disk
-    full_path = Path/STORAGE_DIR, filename)
+    full_path = Path(STORAGE_DIR, filename)
     if not full_path.exist():
         return jsonify({"error": f"File '{filename}' not found on server."}), 404
 
