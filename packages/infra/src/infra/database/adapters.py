@@ -100,3 +100,36 @@ class SqlAlchemySubmissionRepository(SubmissionRepository):
             ))
 
         return submissions
+
+    def get_by_id(self, submission_id: str) -> Submission | None:
+        m = self.session.query(SubmissionModel).filter_by(id=submission_id).first()
+        if not m:
+            return None
+
+        items = [
+            SubmissionItem(
+                id=item.id,
+                submission_id=item.submission_id,
+                tag_id=item.tag_id,
+                item_type=item.item_type,
+                content_payload=item.content_payload
+            ) for item in m.items
+        ]
+
+        return Submission(
+            id=m.id,
+            user_id=m.user_id,
+            latitude=m.latitude,
+            longitude=m.longitude,
+            device_timestamp=m.device_timestamp,
+            server_timestamp=m.server_timestamp,
+            status=m.status,
+            items=items
+        )
+
+    def delete(self, submission_id: str) -> None:
+        model = self.session.query(SubmissionModel).filter_by(id=submission_id).first()
+        if model:
+            self.session.delete(model)
+            self.session.commit()
+            logger.info("submission_deleted", submission_id=submission_id)

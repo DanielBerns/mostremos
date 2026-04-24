@@ -48,42 +48,48 @@ def main():
 
     logger.info("json_saved", path=str(json_path), count=len(submissions))
 
-    # 4. Download the physical Image files
-    # This automatically strips a trailing slash and appends /file to match your new route
+    # 4. Download the physical files AND delete remote records
     base_file_url = args.api_url.rstrip("/") + "/file"
+    base_delete_url = args.api_url.rstrip("/") # Base URL without trailing slash
 
     for sub in submissions:
+        sub_id = sub.get("id")
+        download_success = True
+
         for item in sub.get("items", []):
             if item.get("item_type") == "image":
-
-                # Extract the filename from the payload
-                payload = item.get("content_payload", {})
-                filename = payload.get("filename")
-
+                filename = item.get("content_payload", {}).get("filename")
                 if not filename:
-                    logger.warning("missing_filename_in_payload", item_id=item.get("id"))
                     continue
 
                 file_url = f"{base_file_url}/{filename}"
                 local_file_path = images_dir / filename
 
-                # Skip if we already downloaded it previously
                 if local_file_path.exists():
                     logger.debug("file_already_exists", filename=filename)
                     continue
 
-                # Stream the download
                 logger.info("downloading_image", filename=filename)
                 img_response = requests.get(file_url, headers=headers, stream=True)
 
                 if img_response.ok:
-                    # Write in chunks to prevent memory spikes
                     with open(local_file_path, 'wb') as f:
                         for chunk in img_response.iter_content(chunk_size=8192):
                             f.write(chunk)
                     logger.info("image_downloaded", filename=filename)
                 else:
                     logger.error("image_download_failed", filename=filename, status=img_response.status_code)
+                    download_success = False # Flag failure so we don't delete the remote data
+
+        # 5. Annihilate the remote buffer data if everything succeeded
+        if download_success:
+            delete_url = f"{base_delete_url}/{sub_id}"
+            del_response = requests.delete(delete_url, headers=headers)
+
+            if del_response.ok:
+                logger.info("remote_buffer_cleared", submission_id=sub_id)
+            else:
+                logger.error("remote_delete_failed", submission_id=sub_id, status=del_response.status_code)
 
 if __name__ == "__main__":
     main()

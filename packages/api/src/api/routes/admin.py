@@ -61,3 +61,32 @@ def download_file(filename):
         path=filename,
         as_attachment=True
     )
+
+
+@bp.route('/submissions/<submission_id>', methods=['DELETE'])
+@require_admin_key
+def delete_submission(submission_id):
+    """Deletes a submission and its associated files from the buffer."""
+    repo = get_submission_repo()
+    submission = repo.get_by_id(submission_id)
+
+    if not submission:
+        return jsonify({"error": "Submission not found"}), 404
+
+    # 1. Annihilate the physical files first
+    for item in submission.items:
+        if item.item_type == "image":
+            filename = item.content_payload.get("filename")
+            if filename:
+                file_path = Path(STORAGE_DIR, filename)
+                if file_path.exists():
+                    try:
+                        file_path.unlink() # Deletes the physical file
+                        logger.info("file_deleted", filename=filename)
+                    except Exception as e:
+                        logger.error("file_delete_error", filename=filename, error=str(e))
+
+    # 2. Annihilate the database record
+    repo.delete(submission_id)
+
+    return jsonify({"message": "Submission and associated files annihilated"}), 200

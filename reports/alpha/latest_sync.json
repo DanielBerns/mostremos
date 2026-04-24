@@ -1,5 +1,30 @@
 [
   {
+    "id": "df21e012-895a-4dd6-905c-a049eed6b243",
+    "items": [
+      {
+        "content_payload": {
+          "file_path": "/home/danielwaltherberns/Info/mostremos/devel/storage/715e4651-a5f2-4dd4-8b8f-f7cce65f0d61_photo_1777045065286.jpg",
+          "filename": "715e4651-a5f2-4dd4-8b8f-f7cce65f0d61_photo_1777045065286.jpg"
+        },
+        "id": "7bb25f42-4b62-4a3d-8c9e-925d98f81c49",
+        "item_type": "image",
+        "tag_id": "tag_price_001"
+      },
+      {
+        "content_payload": {
+          "notes": "test"
+        },
+        "id": "4831b55d-afff-46b4-9481-38970e37ba7f",
+        "item_type": "text",
+        "tag_id": "tag_price_001"
+      }
+    ],
+    "latitude": -45.8750745,
+    "longitude": -67.51809,
+    "status": "pending"
+  },
+  {
     "id": "8ce95e2d-ae31-4810-a6d2-8761ce754238",
     "items": [
       {
