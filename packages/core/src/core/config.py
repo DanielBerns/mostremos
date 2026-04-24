@@ -44,3 +44,7 @@ STORAGE_DIR = config.get("STORAGE_DIR", DEFAULT_STORAGE_DIR)
 
 # Admin Authentication
 ADMIN_API_KEY = config.get("ADMIN_API_KEY", "dev-secret-admin-key-123")
+
+# User Authentication
+JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "dev-your-super-secret-key-123")
+JWT_ALGORITHM = "HS256"

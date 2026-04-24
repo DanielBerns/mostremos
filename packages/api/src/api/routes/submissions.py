@@ -1,11 +1,13 @@
 import uuid
 import json
 from datetime import datetime, timezone
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
+
 from marshmallow import ValidationError
 from werkzeug.utils import secure_filename
 
 from api.schemas import SubmissionSchema, get_error_msg
+from api.middleware import require_user_token
 from api.dependencies import get_submission_repo, get_storage_adapter
 from core.domain.models import Submission, SubmissionItem
 from core.config import DEMO_BOUNDING_BOX
@@ -13,6 +15,7 @@ from core.config import DEMO_BOUNDING_BOX
 bp = Blueprint('submissions', __name__, url_prefix='/api/v1/submissions')
 
 @bp.route('/', methods=['POST'])
+@require_user_token
 def create_submission():
     # 1. Determine Language for errors
     lang = request.accept_languages.best_match(['es', 'en'], default='es')
