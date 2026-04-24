@@ -77,7 +77,7 @@ def create_submission():
     # Construct the parent Submission object using the validated data and items list
     submission = Submission(
         id=submission_id,
-        user_id=validated_data['user_id'],
+        user_id=g.user_id,
         latitude=validated_data['latitude'],
         longitude=validated_data['longitude'],
         device_timestamp=validated_data['device_timestamp'],
