@@ -4,8 +4,6 @@ import json
 from pathlib import Path
 import structlog
 
-import pdb
-
 logger = structlog.get_logger()
 
 def main():
@@ -40,7 +38,6 @@ def main():
         logger.info("no_new_data")
         return
 
-    pdb.set_trace()
     # 3. Save the JSON payload
     json_path = output_dir / "latest_sync.json"
     with open(json_path, "w", encoding="utf-8") as f:
