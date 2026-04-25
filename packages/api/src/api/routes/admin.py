@@ -1,9 +1,11 @@
+import secrets
+from functools import wraps
 from pathlib import Path
-from flask import Blueprint, send_from_directory, jsonify
-from core.config import STORAGE_DIR
-from api.auth import require_admin_key
-from api.dependencies import get_submission_repo
 import structlog
+from flask import Blueprint, send_from_directory, request, jsonify
+from core.config import STORAGE_DIR, ADMIN_API_KEY
+from api.middleware import require_admin_key
+from api.dependencies import get_submission_repo
 
 logger = structlog.get_logger()
 bp = Blueprint('admin', __name__, url_prefix='/api/v1/admin')

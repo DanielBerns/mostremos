@@ -1,3 +1,140 @@
+// --- AUTHENTICATION & SESSION MANAGEMENT ---
+const loginSection = document.getElementById('login-section');
+const registerSection = document.getElementById('register-section');
+const reportingSection = document.getElementById('reporting-section');
+
+const loginForm = document.getElementById('login-form');
+const registerForm = document.getElementById('register-form');
+
+const logoutBtn = document.getElementById('logout-btn');
+const showRegisterBtn = document.getElementById('show-register');
+const showLoginBtn = document.getElementById('show-login');
+
+const loginError = document.getElementById('login-error');
+const loginBtn = document.getElementById('login-btn');
+const registerError = document.getElementById('register-error');
+const registerBtn = document.getElementById('register-btn');
+
+// UI Toggles
+if (showRegisterBtn) {
+    showRegisterBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginSection.style.display = 'none';
+        registerSection.style.display = 'block';
+    });
+}
+
+if (showLoginBtn) {
+    showLoginBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        registerSection.style.display = 'none';
+        loginSection.style.display = 'block';
+    });
+}
+
+// Check if user is already logged in
+function checkAuth() {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+        if (loginSection) loginSection.style.display = 'none';
+        if (registerSection) registerSection.style.display = 'none';
+        if (reportingSection) reportingSection.style.display = 'block';
+    } else {
+        if (loginSection) loginSection.style.display = 'block';
+        if (registerSection) registerSection.style.display = 'none';
+        if (reportingSection) reportingSection.style.display = 'none';
+    }
+}
+
+// Handle Login
+if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        loginBtn.disabled = true;
+        loginBtn.innerText = "Verificando...";
+        loginError.style.display = 'none';
+
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            const response = await fetch('/api/v1/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Save token and switch UI
+                localStorage.setItem('auth_token', data.access_token);
+                loginForm.reset();
+                checkAuth();
+            } else {
+                loginError.innerText = data.error || "Error al iniciar sesión";
+                loginError.style.display = 'block';
+            }
+        } catch (err) {
+            loginError.innerText = "Error de red. Intente nuevamente.";
+            loginError.style.display = 'block';
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.innerText = "Ingresar";
+        }
+    });
+}
+
+// Handle Register
+if (registerForm) {
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        registerBtn.disabled = true;
+        registerBtn.innerText = "Registrando...";
+        registerError.style.display = 'none';
+
+        const username = document.getElementById('reg-username').value;
+        const password = document.getElementById('reg-password').value;
+
+        try {
+            const response = await fetch('/api/v1/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Save token and jump straight into the app
+                localStorage.setItem('auth_token', data.access_token);
+                registerForm.reset();
+                checkAuth();
+            } else {
+                registerError.innerText = data.error || "Error al registrarse";
+                registerError.style.display = 'block';
+            }
+        } catch (err) {
+            registerError.innerText = "Error de red. Intente nuevamente.";
+            registerError.style.display = 'block';
+        } finally {
+            registerBtn.disabled = false;
+            registerBtn.innerText = "Registrarse";
+        }
+    });
+}
+
+// Handle Logout
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('auth_token');
+        checkAuth();
+    });
+}
+
+// Run auth check on load
+checkAuth();
+
 // Register the Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -83,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let quality = 1.0;
 
             // Apply optional compression logic
-            if (compressCheckbox.checked) {
+            if (compressCheckbox && compressCheckbox.checked) {
                 const maxWidth = 1024;
                 if (targetWidth > maxWidth) {
                     targetHeight = Math.round((targetHeight * maxWidth) / targetWidth);
@@ -125,84 +262,94 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (cameraContainer) {
             cameraContainer.style.display = 'none';
-            btnStartCamera.style.display = 'block';
+            if(btnStartCamera) btnStartCamera.style.display = 'block';
             capturedBlob = null;
-            photoPreview.style.display = 'none';
-            videoElement.style.display = 'block';
-            btnCapture.style.display = 'block';
-            btnRetake.style.display = 'none';
+            if(photoPreview) photoPreview.style.display = 'none';
+            if(videoElement) videoElement.style.display = 'block';
+            if(btnCapture) btnCapture.style.display = 'block';
+            if(btnRetake) btnRetake.style.display = 'none';
         }
     }
 
     // 3. Handle Form Submission
     const form = document.getElementById('submission-form');
 
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-        if (!latInput.value || !lonInput.value) {
-            alert("Espere a obtener las coordenadas del GPS.");
-            return;
-        }
-
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Enviando al servidor...";
-
-        try {
-            const formData = new FormData();
-            const items = [];
-            const tagValue = choices.getValue(true);
-
-            // A. Attach the captured image (Gallery fallback removed)
-            if (capturedBlob) {
-                items.push({ tag_id: tagValue, item_type: "image", content_payload: {} });
-                formData.append('file', capturedBlob, `photo_${Date.now()}.jpg`);
+            if (!latInput.value || !lonInput.value) {
+                alert("Espere a obtener las coordenadas del GPS.");
+                return;
             }
 
-            // B. Attach the text/notes item
-            items.push({
-                tag_id: tagValue,
-                item_type: "text",
-                content_payload: { notes: document.getElementById('notes').value }
-            });
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Enviando al servidor...";
 
-            // C. Build the JSON payload structure
-            const apiPayload = {
-                user_id: "demo_user_1",
-                latitude: parseFloat(latInput.value),
-                          longitude: parseFloat(lonInput.value),
-                          device_timestamp: new Date().toISOString(),
-                          items: items
-            };
+            try {
+                const formData = new FormData();
+                const items = [];
+                const tagValue = choices.getValue(true);
 
-            formData.append('data', JSON.stringify(apiPayload));
+                // A. Attach the captured image
+                if (capturedBlob) {
+                    items.push({ tag_id: tagValue, item_type: "image", content_payload: {} });
+                    formData.append('file', capturedBlob, `photo_${Date.now()}.jpg`);
+                }
 
-                          // D. Transmit directly to the Flask API
-                          const response = await fetch('/api/v1/submissions/', {
-                              method: 'POST',
-                              headers: {
-                                  'Accept-Language': 'es'
-                              },
-                              body: formData
-                          });
+                // B. Attach the text/notes item
+                items.push({
+                    tag_id: tagValue,
+                    item_type: "text",
+                    content_payload: { notes: document.getElementById('notes').value }
+                });
 
-            if (response.ok) {
-                alert("Reporte enviado con éxito.");
-                form.reset();
-                          choices.setChoiceByValue('');
-                stopCamera();
-            } else {
-                const errorData = await response.json();
-                console.error("Server rejection:", errorData);
-                alert(`Error del servidor: ${errorData.error || 'Desconocido'}`);
+                // C. Build the JSON payload structure
+                const apiPayload = {
+                    latitude: parseFloat(latInput.value),
+                              longitude: parseFloat(lonInput.value),
+                              device_timestamp: new Date().toISOString(),
+                              items: items
+                };
+
+                formData.append('data', JSON.stringify(apiPayload));
+
+                              // Grab the token securely from local storage
+                              const token = localStorage.getItem('auth_token');
+
+                // D. Transmit securely to the Flask API
+                const response = await fetch('/api/v1/submissions/', {
+                    method: 'POST',
+                    headers: {
+                        'Accept-Language': 'es',
+                        'Authorization': `Bearer ${token}` // Inject the JWT!
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert("Reporte enviado con éxito.");
+                    form.reset();
+                              choices.setChoiceByValue('');
+                    stopCamera();
+                } else if (response.status === 401) {
+                    // Token expired or invalid!
+                    alert("Su sesión ha expirado. Por favor inicie sesión nuevamente.");
+                    localStorage.removeItem('auth_token');
+                    checkAuth(); // Kick them back to the login screen
+                } else {
+                    const errorData = await response.json();
+                    console.error("Server rejection:", errorData);
+                    alert(`Error del servidor: ${errorData.error || 'Desconocido'}`);
+                }
+
+            } catch (networkError) {
+                console.error("Upload failed:", networkError);
+                alert("Error de red. Verifique su conexión y vuelva a intentar.");
+            } finally {
+                submitBtn.innerText = "Enviar Reporte";
+                submitBtn.disabled = false;
             }
-
-        } catch (networkError) {
-            console.error("Upload failed:", networkError);
-            alert("Error de red. Verifique su conexión y vuelva a intentar.");
-        } finally {
-            submitBtn.innerText = "Enviar Reporte";
-            submitBtn.disabled = false;
-        }
-    });
+        });
+    }
 });

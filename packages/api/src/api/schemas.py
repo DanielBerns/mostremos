@@ -25,7 +25,6 @@ class SubmissionItemSchema(Schema):
     content_payload = fields.Dict(required=True)
 
 class SubmissionSchema(Schema):
-    user_id = fields.String(required=True)
     latitude = fields.Float(required=True)
     longitude = fields.Float(required=True)
     device_timestamp = fields.DateTime(required=True)

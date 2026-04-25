@@ -1,5 +1,6 @@
 import uuid
 import secrets
+import getpass
 import structlog
 from werkzeug.security import generate_password_hash
 
@@ -28,10 +29,14 @@ def bootstrap_database():
             logger.warning("Admin user already exists. Skipping creation.")
             return
 
+        password = str(uuid.uuid4()) # admin no need a password like other users
+        hashed_password = generate_password_hash(password)
+
         # 3. Insert the root admin user
         admin_user = UserModel(
             id=str(uuid.uuid4()),
             username=admin_username,
+            password_hash=hashed_password,
             role="admin",
             is_active=True
         )

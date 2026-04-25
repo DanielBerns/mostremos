@@ -1,10 +1,9 @@
 import os
 from pathlib import Path
 from flask import Flask, send_from_directory
-from flask_cors import CORS
 import structlog
 
-from api.routes import submissions, admin
+from api.routes import submissions, auth, admin
 
 logger = structlog.get_logger()
 
@@ -18,11 +17,9 @@ def create_app():
     # 2. Tell Flask where the static files are, and set the URL path to root ('/')
     app = Flask(__name__, static_folder=str(frontend_dir), static_url_path='/')
 
-    # Enable CORS for development
-    CORS(app)
-
     # Register Blueprints
     app.register_blueprint(submissions.bp)
+    app.register_blueprint(auth.bp)
     app.register_blueprint(admin.bp)
 
     # Health check endpoint

@@ -14,6 +14,7 @@ class SqlAlchemyUserRepository(UserRepository):
         model = UserModel(
             id=user.id,
             username=user.username,
+            password_hash=user.password_hash, # <-- Mapped
             role=user.role,
             is_active=user.is_active,
             created_at=user.created_at
@@ -26,8 +27,28 @@ class SqlAlchemyUserRepository(UserRepository):
         model = self.session.query(UserModel).filter_by(id=user_id).first()
         if not model:
             return None
-        return User(id=model.id, username=model.username, role=model.role,
-                    is_active=model.is_active, created_at=model.created_at)
+        return User(
+            id=model.id,
+            username=model.username,
+            password_hash=model.password_hash, # <-- Mapped
+            role=model.role,
+            is_active=model.is_active,
+            created_at=model.created_at
+        )
+
+    def get_by_username(self, username: str) -> User | None:
+        """New method: Required for the authentication login flow."""
+        model = self.session.query(UserModel).filter_by(username=username).first()
+        if not model:
+            return None
+        return User(
+            id=model.id,
+            username=model.username,
+            password_hash=model.password_hash,
+            role=model.role,
+            is_active=model.is_active,
+            created_at=model.created_at
+        )
 
     def deactivate(self, user_id: str) -> None:
         """Soft delete implementation."""
@@ -36,6 +57,7 @@ class SqlAlchemyUserRepository(UserRepository):
             user.is_active = False
             self.session.commit()
             logger.info("user_deactivated", user_id=user_id)
+
 
 class SqlAlchemySubmissionRepository(SubmissionRepository):
     def __init__(self, session: Session):
